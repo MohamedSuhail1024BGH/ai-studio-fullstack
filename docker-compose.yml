@@ -22,7 +22,7 @@ services:
     volumes:
       - .:/app
     environment:
-      - OLLAMA_HOST=http://127.0.0.1:11434
+      - OLLAMA_HOST=http://host.docker.internal:11434
       - DATABASE_URL=postgresql://suhail:password456@db:5432/ai_chat_db
     extra_hosts:
       - "host.docker.internal:host-gateway"

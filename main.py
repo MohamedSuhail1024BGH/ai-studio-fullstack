@@ -51,13 +51,14 @@ def get_db_connection():
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Dynamic Ollama host for Docker networking
-OLLAMA_URL = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
-ollama_client = ollama.Client(host=OLLAMA_URL)
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://host.docker.internal:11434")
+ollama_client = ollama.Client(host=OLLAMA_HOST)
 
 def init_db():
     conn = get_db_connection()
