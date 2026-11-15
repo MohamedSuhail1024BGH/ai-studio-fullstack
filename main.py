@@ -228,3 +228,22 @@ def clear_user_chats(username: str):
     conn.commit()
     conn.close()
     return {"status": "cleared", "deleted_for": username}
+
+@app.get("/history/{username}")
+def get_user_history(username: str, x_api_key: str = Header(None)):
+    if x_api_key != API_SECRET_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+    user = cursor.fetchone()
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="User not found")
+    cursor.execute(
+        "SELECT id, prompt, ai_reply, model, tokens FROM history WHERE user_id = %s ORDER BY id ASC", (user["id"],),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return {"username": username, "history": rows}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 export default function App() {
@@ -10,6 +10,46 @@ export default function App() {
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
+
+  const loadHistory = async(targetUser = sender) => {
+    if (!targetUser.trim()) return;
+    try {
+      const res = await fetch(`http://localhost:8000/history/${targetUser}`, {
+        headers: { "X-API-KEY": apiKey},
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        setMessages([
+          { role: "error", content: `History fetch failed (${res.status}): ${errText}` },
+        ]);
+        return;
+      }
+
+      const data = await res.json();
+      const rows = Array.isArray(data) ? data : data.history || [];
+      const pastMessages = [];
+
+      for (const row of rows) {
+        pastMessages.push({ role: "user", content: row.prompt });
+        pastMessages.push({ 
+          role: "assistant", 
+          content: row.ai_reply,
+          meta: `${row.model} - ${row.tokens} tokens`,
+        });
+      }
+      setMessages(pastMessages);
+    } catch (err) {
+      setMessages([
+        { role: "error", content: `History error: ${err.message}` },
+      ]);
+    }
+
+  };
+
+  useEffect(() => {
+    loadHistory(sender);
+  }, []);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -107,12 +147,39 @@ export default function App() {
         </select>
       </div>
 
-      <div style={{ border: "1px solid #444", borderRadius: "8px", padding: "1rem", minHeight: "300px", marginBottom: "1rem" }}>
-        {messages.map((msg, idx) => (
-          <div key={idx} style={{ marginBottom: "0.75rem", color: msg.role === "error" ? "#fff6b6b" : "inherit" }}>
+      <div style={{ 
+        border: "1px solid #444",
+        background: "#1e1e1e", 
+        color: "#f5f5f5",
+        borderRadius: "8px", 
+        padding: "1rem", 
+        minHeight: "300px", 
+        maxHeight: "450px",
+        marginBottom: "1rem", 
+        overflowY: "auto",
+        textAlign: "left",
+        }}
+      >
+        {messages.length === 0 ? (
+          <p style={{ color: "#888" }}>No history yet for {sender}</p>
+        ) : (
+          messages.map((msg, idx) => (
+          <div 
+            key={idx} 
+            style={{ 
+              marginBottom: "0.75rem",
+              color: msg.role === "error" ? "#ff6b6b" : "#f5f5f5" 
+            }}
+          >
             <strong>{msg.role.toUpperCase()}:</strong> {msg.content}
+            {msg.meta && (
+              <span style={{ fontSize: "0.75rem", color: "#888", marginLeft: "0.5rem" }}>
+                ({msg.meta})
+              </span>
+            )}
           </div>
-        ))}
+        ))
+        )}
       </div>
 
       <form onSubmit={sendMessage} style={{ display: "flex", gap: "0.5rem" }}>
