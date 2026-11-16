@@ -51,6 +51,28 @@ export default function App() {
     loadHistory(sender);
   }, []);
 
+  const clearHistory = async () => {
+    if (!sender.trim()) return;
+    try {
+      const res = await fetch(`http://localhost:8000/chats/${sender}`, {
+        method: "DELETE",
+        headers: { "X-API-KEY": apiKey },
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        setMessages([
+          { role: "error", content: `Delete failed (${res.status}): ${errData.detail}` },
+        ]);
+        return;
+      }
+
+      setMessages([]);
+    } catch (err) {
+      console.error("Failed to clear history:", err);
+    }
+  };
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!prompt.trim() | isStreaming) return;
@@ -181,6 +203,20 @@ export default function App() {
         ))
         )}
       </div>
+
+      <button 
+        type="button" 
+        onClick={() => loadHistory(sender)}
+      >
+        Load History
+      </button>
+      <button
+        type="button"
+        onClick={clearHistory}
+        style={{ backgroundColor: "#b91c1c", color: "#ffffff"}}
+      >
+        Clear History
+      </button>
 
       <form onSubmit={sendMessage} style={{ display: "flex", gap: "0.5rem" }}>
         <input
