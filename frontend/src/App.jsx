@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef   } from "react";
+import ReactMarkdown from "react-markdown";
 import "./App.css";
 
 export default function App() {
@@ -10,6 +11,12 @@ export default function App() {
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
+
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const loadHistory = async(targetUser = sender) => {
     if (!targetUser.trim()) return;
@@ -148,10 +155,23 @@ export default function App() {
 
       <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1rem" }}>
         <input
-         value={sender}
-         onChange={(e) => setSender(e.target.value)}
-         placeholder="Username (e.g. Suhail)"
+          value={sender}
+          onChange={(e) => setSender(e.target.value)}
+          placeholder="Username (e.g. Suhail)"
         />
+        <button 
+          type="button" 
+          onClick={() => loadHistory(sender)}
+          >
+          Load History
+        </button>
+        <button
+          type="button"
+          onClick={clearHistory}
+          style={{ backgroundColor: "#b91c1c", color: "#ffffff"}}
+          >
+          Clear History
+        </button>
         <input type="password" 
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
@@ -190,33 +210,26 @@ export default function App() {
             key={idx} 
             style={{ 
               marginBottom: "0.75rem",
-              color: msg.role === "error" ? "#ff6b6b" : "#f5f5f5" 
+              padding: "0.5rem 0.75rem",
+              borderRadius: "6px",
+              background: msg.role === "user" ? "#2b2b2b": "transparent",
+              color: msg.role === "error" ? "#ff6b6b" : "#f5f5f5", 
             }}
           >
-            <strong>{msg.role.toUpperCase()}:</strong> {msg.content}
+            <strong>{msg.role.toUpperCase()}:</strong>  
             {msg.meta && (
               <span style={{ fontSize: "0.75rem", color: "#888", marginLeft: "0.5rem" }}>
                 ({msg.meta})
               </span>
             )}
+            <div style={{ marginTop: "0.25rem" }}>
+              <ReactMarkdown>{msg.content}</ReactMarkdown>
+            </div>
           </div>
         ))
         )}
+        <div ref={chatEndRef} />
       </div>
-
-      <button 
-        type="button" 
-        onClick={() => loadHistory(sender)}
-      >
-        Load History
-      </button>
-      <button
-        type="button"
-        onClick={clearHistory}
-        style={{ backgroundColor: "#b91c1c", color: "#ffffff"}}
-      >
-        Clear History
-      </button>
 
       <form onSubmit={sendMessage} style={{ display: "flex", gap: "0.5rem" }}>
         <input

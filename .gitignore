@@ -3,6 +3,8 @@
 *.db-journal
 
 # Ignore Python cache & virtual environments
+.env
+!.env.example
 __pycache__/
 *.pyc
 venv/
