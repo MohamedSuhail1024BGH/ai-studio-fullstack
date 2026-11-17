@@ -41,7 +41,7 @@ A containerized, 3-tier AI chat platform featuring real-time LLM token streaming
 ### 2. Configure Environment Variables
 Clone the repository and create your `.env` file from the template:
 ```bash
-git clone https://github.com/MohamedSuhail1024BGH/learn-git.git
+git clone https://github.com/MohamedSuhail1024BGH/ai-studio-fullstack.git
 cd learn-git
 cp .env.example .env
 ```
